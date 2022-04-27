@@ -1,0 +1,51 @@
+name: Creating a CI/CD pipeline
+
+on:
+  workflow_dispatch
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    env:
+      environment: staging
+    
+    steps:
+      - name: Checkout # similar to git clone in this regard.
+        uses: actions/checkout@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform # sets up TF on the ubuntu machine
+        uses: hashicorp/setup-terraform@v1
+
+
+
+
+      # at this point we're issuing Terraform commands
+      - name: Terraform init
+        working-directory: terraform-files
+        run: |
+          terraform init \
+            -backend-config "bucket=code-challenges-paul-2022" \
+            -backend-config "key=srecourse.tfstate"
+
+      - name: Terraform Format
+        working-directory: terraform-files
+        run: terraform fmt
+
+      
+      - name: Terraform Plan
+        working-directory: terraform-files
+        run: terraform plan
+
+      
+      - name: Terraform Apply
+        working-directory: terraform-files
+        run: terraform apply -auto-approve
+
+
+        
+
